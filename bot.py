@@ -7,8 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-# ================== НАСТРОЙКИ ==================
-TOKEN = os.getenv"8996202857:AAHI9zeyF5Ivl80u0-GC8uRwGLeXcg6zemI"
+TOKEN = os.getenv("8996202857:AAHI9zeyF5Ivl80u0-GC8uRwGLeXcg6zemI")
 
 FUNPAY_URL = "https://funpay.com/uk/users/19612186/"
 PAYGAME_URL = "https://paygame.ru/users/SAKO1"
@@ -28,7 +27,6 @@ products = {
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ================== СТАРТ ==================
 @dp.message(Command("start"))
 async def start(message: Message):
     kb = InlineKeyboardBuilder()
@@ -38,12 +36,10 @@ async def start(message: Message):
     kb.adjust(1)
 
     await message.answer(
-        "🎒 Добро пожаловать в METRO ROYALE SHOP от клана SK¹!\n\n"
-        "Выбирайте нужный раздел 👇",
+        "🎒 Добро пожаловать!\n\nВыбирайте 👇",
         reply_markup=kb.as_markup()
     )
 
-# ================== ТОВАРЫ ==================
 @dp.callback_query(F.data == "view_products")
 async def show_products(callback: CallbackQuery):
     kb = InlineKeyboardBuilder()
@@ -55,12 +51,11 @@ async def show_products(callback: CallbackQuery):
     kb.adjust(1)
 
     await callback.message.edit_text(
-        "📱 СПИСОК УСЛУГ\n\nВыберите:",
+        "📱 СПИСОК УСЛУГ:",
         reply_markup=kb.as_markup()
     )
     await callback.answer()
 
-# ================== ВЫБОР ==================
 @dp.callback_query(F.data.startswith("prod:"))
 async def select_product(callback: CallbackQuery):
     prod_idx = int(callback.data.split(":")[1])
@@ -75,35 +70,31 @@ async def select_product(callback: CallbackQuery):
     kb.adjust(1)
 
     await callback.message.edit_text(
-        f"🛒 {product_name}\n\n💰 Цена: {product_price}",
+        f"{product_name}\n\n💰 {product_price}",
         reply_markup=kb.as_markup()
     )
     await callback.answer()
 
-# ================== НАЗАД ==================
 @dp.callback_query(F.data == "back_to_menu")
 async def back_to_menu(callback: CallbackQuery):
     kb = InlineKeyboardBuilder()
-    kb.button(text="🛒 Услуги клана SK¹", callback_data="view_products")
+    kb.button(text="🛒 Услуги", callback_data="view_products")
     kb.button(text="⭐ Отзывы", url=REVIEWS_URL)
     kb.button(text="💬 Поддержка", url=SUPPORT_URL)
     kb.adjust(1)
 
     await callback.message.edit_text(
-        "Главное меню 👇",
+        "Главное меню",
         reply_markup=kb.as_markup()
     )
     await callback.answer()
 
-# ================== WEB SERVER (для Render) ==================
 async def handle(request):
     return web.Response(text="Bot is running")
 
 async def main():
-    # бот
     asyncio.create_task(dp.start_polling(bot))
 
-    # веб сервер
     app = web.Application()
     app.router.add_get("/", handle)
 
@@ -112,8 +103,6 @@ async def main():
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-
-    print(f"SERVER STARTED ON PORT {port}")
 
     while True:
         await asyncio.sleep(3600)
