@@ -7,7 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-TOKEN = os.getenv("8996202857:AAHI9zeyF5Ivl80u0-GC8uRwGLeXcg6zemI")
+TOKEN = os.getenv"8996202857:AAHI9zeyF5Ivl80u0-GC8uRwGLeXcg6zemI"
 
 FUNPAY_URL = "https://funpay.com/uk/users/19612186/"
 PAYGAME_URL = "https://paygame.ru/users/SAKO1"
