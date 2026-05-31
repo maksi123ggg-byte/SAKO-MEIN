@@ -1,21 +1,19 @@
 import asyncio
-from threading import Thread
+import os
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # ================== НАСТРОЙКИ ==================
-TOKEN = "8996202857:AAHI9zeyF5Ivl80u0-GC8uRwGLeXcg6zemI"
-ADMIN_ID = 123456789  # <-- сюда свой ID
+TOKEN = os.getenv"8996202857:AAHI9zeyF5Ivl80u0-GC8uRwGLeXcg6zemI"
 
 FUNPAY_URL = "https://funpay.com/uk/users/19612186/"
 PAYGAME_URL = "https://paygame.ru/users/SAKO1"
 REVIEWS_URL = "https://funpay.com/uk/users/19612186/"
 SUPPORT_URL = "https://t.me/SK_SAKO"
-
-AUTORAISE_ENABLED = False
 
 products = {
     "7-Я|СОПРОВОД|ГАРАНТ 20КК+ШМОТ": "230 ₽",
@@ -86,7 +84,7 @@ async def select_product(callback: CallbackQuery):
 @dp.callback_query(F.data == "back_to_menu")
 async def back_to_menu(callback: CallbackQuery):
     kb = InlineKeyboardBuilder()
-    kb.button(text="🛒 Услуги", callback_data="view_products")
+    kb.button(text="🛒 Услуги клана SK¹", callback_data="view_products")
     kb.button(text="⭐ Отзывы", url=REVIEWS_URL)
     kb.button(text="💬 Поддержка", url=SUPPORT_URL)
     kb.adjust(1)
@@ -97,66 +95,28 @@ async def back_to_menu(callback: CallbackQuery):
     )
     await callback.answer()
 
-# ================== АДМИНКА ==================
-def get_admin_kb():
-    kb = InlineKeyboardBuilder()
-    status = "🟢 ВКЛ" if AUTORAISE_ENABLED else "🔴 ВЫКЛ"
+# ================== WEB SERVER (для Render) ==================
+async def handle(request):
+    return web.Response(text="Bot is running")
 
-    kb.button(text="🟢 Включить", callback_data="fp_on")
-    kb.button(text="🔴 Выключить", callback_data="fp_off")
-    kb.button(text="⚡ Поднять сейчас", callback_data="fp_now")
-    kb.adjust(1)
-
-    return kb.as_markup(), status
-
-@dp.message(Command("admin"))
-async def admin_panel(message: Message):
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    kb, status = get_admin_kb()
-
-    await message.answer(
-        f"🤖 АДМИНКА\nСтатус: {status}",
-        reply_markup=kb
-    )
-
-@dp.callback_query(F.data == "fp_on")
-async def fp_on(callback: CallbackQuery):
-    global AUTORAISE_ENABLED
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    AUTORAISE_ENABLED = True
-    kb, status = get_admin_kb()
-
-    await callback.message.edit_text(f"Статус: {status}", reply_markup=kb)
-    await callback.answer("Включено")
-
-@dp.callback_query(F.data == "fp_off")
-async def fp_off(callback: CallbackQuery):
-    global AUTORAISE_ENABLED
-
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    AUTORAISE_ENABLED = False
-    kb, status = get_admin_kb()
-
-    await callback.message.edit_text(f"Статус: {status}", reply_markup=kb)
-    await callback.answer("Выключено")
-
-@dp.callback_query(F.data == "fp_now")
-async def fp_now(callback: CallbackQuery):
-    if callback.from_user.id != ADMIN_ID:
-        return
-
-    await callback.answer("Готово (заглушка)")
-
-# ================== ЗАПУСК ==================
 async def main():
-    await dp.start_polling(bot)
+    # бот
+    asyncio.create_task(dp.start_polling(bot))
+
+    # веб сервер
+    app = web.Application()
+    app.router.add_get("/", handle)
+
+    port = int(os.environ.get("PORT", 10000))
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+    print(f"SERVER STARTED ON PORT {port}")
+
+    while True:
+        await asyncio.sleep(3600)
 
 if __name__ == "__main__":
     asyncio.run(main())
